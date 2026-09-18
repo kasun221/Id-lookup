@@ -45,6 +45,37 @@ function nicBirthInfo(raw){
  return {year,doy,gender,age,dob,dobSi};
 }
 function birthYearFromRecord(x){const b=nicBirthInfo(x.id); return b?b.year:null}
+function oldNicToNewNic(raw){
+ const id=String(raw??"").trim().toUpperCase();
+ if(/^\d{9}[VX]$/.test(id)){
+   return "19" + id.slice(0,5) + "0" + id.slice(5,9);
+ }
+ return null;
+}
+function newNicToOldNicCore(raw){
+ const id=String(raw??"").trim().toUpperCase();
+ if(/^\d{12}$/.test(id) && id.startsWith("19")){
+   return id.slice(2,7) + id.slice(8,12);
+ }
+ return null;
+}
+function nicSearchAliases(raw){
+ const id=norm(raw);
+ const aliases=new Set();
+ if(!id) return aliases;
+ aliases.add(id);
+ const toNew=oldNicToNewNic(id);
+ if(toNew) aliases.add(norm(toNew));
+ const oldCore=newNicToOldNicCore(id);
+ if(oldCore){ aliases.add(norm(oldCore+"V")); aliases.add(norm(oldCore+"X")); }
+ return aliases;
+}
+function nicMatchesSearch(input, storedId){
+ const qAliases=nicSearchAliases(input);
+ const sAliases=nicSearchAliases(storedId);
+ for(const q of qAliases) if(sAliases.has(q)) return true;
+ return false;
+}
 function displayBirthDate(x){const b=nicBirthInfo(x.id); return b?b.dobSi:'-'}
 function addressFromRecord(x){ return x.house && x.gn ? `ගෘහ අංකය ${x.house}, ${x.gn}` : (x.house?`ගෘහ අංකය ${x.house}`:(x.gn||'-')); }
 function downloadBlob(content,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
@@ -67,10 +98,21 @@ function showBirthSuggestions(){
  const digits=q.replace(/\D/g,''); let matches=[];
  if(/^\d{1,4}$/.test(digits)){
    if(digits.length<=2){const yy=digits.padStart(2,'0'); matches=DATA.filter(x=>{const b=birthYearFromRecord(x);return b===1900+parseInt(yy,10)}).slice(0,10);}
-   else {matches=DATA.filter(x=>norm(x.id).startsWith(digits)).slice(0,10);}
- } else {matches=DATA.filter(x=>norm(x.id).startsWith(norm(q))).slice(0,10);}
+   else {matches=DATA.filter(x=>nicSearchAliases(x.id).has(norm(digits)) || norm(x.id).startsWith(norm(q))).slice(0,10);}
+ } else {
+   const nq=norm(q);
+   matches=DATA.filter(x=>{
+     const stored=norm(x.id);
+     if(stored.startsWith(nq)) return true;
+     const toNew=oldNicToNewNic(q);
+     if(toNew && norm(toNew)===stored) return true;
+     const core=newNicToOldNicCore(q);
+     if(core && (norm(core+"V")===stored || norm(core+"X")===stored)) return true;
+     return false;
+   }).slice(0,10);
+ }
  if(!matches.length){box.innerHTML='';box.style.display='none';return}
- box.innerHTML=matches.map(x=>{const b=nicBirthInfo(x.id);return `<div class="suggestion" role="option" data-id="${escapeHtml(x.id)}"><div class="suggestionId">${escapeHtml(x.id)} ${b?`• ${escapeHtml(b.dobSi)} • ${escapeHtml(String(b.age))} වයස`:''}</div><div class="suggestionName">${escapeHtml(x.name||'')}</div></div>`}).join('');box.style.display='block';box.querySelectorAll('.suggestion').forEach(el=>el.onclick=()=>{$('idInput').value=el.dataset.id;hideSuggestions();search();});
+ box.innerHTML=matches.map(x=>{const b=nicBirthInfo(x.id);const oldToNew=oldNicToNewNic(x.id);return `<div class="suggestion" role="option" data-id="${escapeHtml(x.id)}"><div class="suggestionId">${escapeHtml(x.id)} ${oldToNew?`• New ID: ${escapeHtml(oldToNew)}`:''} ${b?`• ${escapeHtml(b.dobSi)} • ${escapeHtml(String(b.age))} වයස`:''}</div><div class="suggestionName">${escapeHtml(x.name||'')}</div></div>`}).join('');box.style.display='block';box.querySelectorAll('.suggestion').forEach(el=>el.onclick=()=>{$('idInput').value=el.dataset.id;hideSuggestions();search();});
 }
 function hideSuggestions(){const box=$('suggestions'); if(box){box.style.display='none';box.innerHTML='';}}
 function escapeHtml(s){return String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
@@ -145,7 +187,7 @@ function elderlyNorm(v){
    .toLocaleLowerCase('si-LK')
    .normalize('NFD')
    .replace(/[\u0300-\u036f]/g,'')
-   .replace(/[\s\-\/\.,()]+/g,'')
+   .replace(/[^\p{L}\p{N}]+/gu,'')
    .trim();
 }
 function elderlyNameMatches(name,q){
@@ -153,7 +195,7 @@ function elderlyNameMatches(name,q){
  if(!needle) return false;
  if(n.includes(needle)) return true;
  const words=String(q).toLocaleLowerCase('si-LK').trim().split(/\s+/).filter(Boolean);
- return words.length>1 && words.every(w=>n.includes(elderlyNorm(w)));
+ return words.length>0 && words.every(w=>n.includes(elderlyNorm(w)));
 }
 function runElderlySearch(){
  const raw=String($('elderlyQ')?.value||'').trim();
@@ -162,17 +204,22 @@ function runElderlySearch(){
  const list=Array.isArray(ELDERLY)?ELDERLY:[];
  if(!q){
    if(drop) drop.style.display='none';
-   if(out) out.innerHTML='';
+   if(out) out.innerHTML='<div class="elderlySearchEmpty">නමක්, ID Number එකක් හෝ HH Number එකක් ටයිප් කරන්න.</div>';
    return;
  }
  const scored=list.map(x=>{
    const name=elderlyNorm(x.name), nic=elderlyNorm(x.nic||x.id), hh=elderlyNorm(x.hh||x.house), allowance=elderlyNorm(x.allowance_no);
-   let score=0;
-   if(name===q) score=100;
-   else if(name.startsWith(q)) score=90;
-   else if(elderlyNameMatches(x.name,raw)) score=80;
+   let score=-1;
+   // Name is the primary search field.
+   if(name===q) score=120;
+   else if(name.startsWith(q)) score=110;
+   else if(elderlyNameMatches(x.name,raw)) score=100;
+   // Other identifiers remain searchable too.
+   else if(nic===q) score=90;
+   else if(hh===q) score=85;
+   else if(allowance===q) score=80;
    else if(nic.includes(q)||hh.includes(q)||allowance.includes(q)) score=70;
-   else return null;
+   if(score<0) return null;
    return {x,score};
  }).filter(Boolean).sort((a,b)=>b.score-a.score || String(a.x.name||'').localeCompare(String(b.x.name||''),'si'));
  const hits=scored.map(o=>o.x);
@@ -188,7 +235,6 @@ function runElderlySearch(){
  }
  renderElderlyRows(hits);
 }
-
 function renderElderlyRows(rows){
  const out=$('elderlyResults'); if(!out)return;
  out.innerHTML=rows.length?rows.map(x=>`<div class="elderlyItem"><div class="elderlyName">${escapeHtml(x.name||'-')}</div><div class="elderlyMeta">${x.allowance_no?`Adult Allowance No: <b>${escapeHtml(x.allowance_no)}</b><br>`:''}ID Number: <b>${escapeHtml(x.nic||x.id||'Not available')}</b><br>HH Number: <b>${escapeHtml(x.hh||x.house||'-')}</b>${x.address?`<br>Address: <b>${escapeHtml(x.address)}</b>`:''}</div></div>`).join(''):'<div class="elderlyItem">No matching record found</div>';
@@ -479,7 +525,13 @@ function runBirthSearch(){
 async function search(){
  const ALL_RECORDS=await getAllAppRecords();
 
- const id=norm($('idInput').value); const x=MAP.get(id);
+ const rawId=String($('idInput').value||'').trim();
+ const id=norm(rawId);
+ let x=MAP.get(id);
+ if(!x){
+   // Match old 9-digit+V/X NIC with its 12-digit equivalent, and vice versa.
+   x=DATA.find(r=>nicMatchesSearch(rawId,r.id));
+ }
  $('result').style.display=x?'block':'none'; $('notfound').style.display=x?'none':'block';
  if(!x)return;
  $('name').textContent=x.name||'නම ලබාගත නොහැක';
