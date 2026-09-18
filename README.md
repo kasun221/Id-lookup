@@ -1,3 +1,5 @@
+V48 update: Elderly Allowance List ID and HH numbers are clickable. ID opens the main ID Lookup and searches that NIC; HH copies the HH number and opens IWMS Household Search. Main ID Lookup HH click retains the same IWMS behavior. Sri Lankan old/new NIC aliases are supported for ID lookup.
+
 V35 - Vercel + Supabase
 
 1. Open Supabase SQL Editor.
