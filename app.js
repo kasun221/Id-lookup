@@ -140,29 +140,55 @@ function initYearSelectors(){
  from.onchange=()=>{ if(!to.value) to.value=from.value; else if(+to.value < +from.value) to.value=from.value; };
 }
 
+function elderlyNorm(v){
+ return String(v??'')
+   .toLocaleLowerCase('si-LK')
+   .normalize('NFD')
+   .replace(/[\u0300-\u036f]/g,'')
+   .replace(/[\s\-\/\.,()]+/g,'')
+   .trim();
+}
+function elderlyNameMatches(name,q){
+ const n=elderlyNorm(name), needle=elderlyNorm(q);
+ if(!needle) return false;
+ if(n.includes(needle)) return true;
+ const words=String(q).toLocaleLowerCase('si-LK').trim().split(/\s+/).filter(Boolean);
+ return words.length>1 && words.every(w=>n.includes(elderlyNorm(w)));
+}
 function runElderlySearch(){
- const q=String($('elderlyQ')?.value||'').trim().toLowerCase();
+ const raw=String($('elderlyQ')?.value||'').trim();
+ const q=elderlyNorm(raw);
  const drop=$('elderlyDropdown'), out=$('elderlyResults');
  const list=Array.isArray(ELDERLY)?ELDERLY:[];
- const hits=q?list.filter(x=>
-   String(x.nic||x.id||'').toLowerCase().includes(q) ||
-   String(x.hh||x.house||'').toLowerCase().includes(q) ||
-   String(x.allowance_no||'').toLowerCase().includes(q) ||
-   String(x.name||'').toLowerCase().includes(q)
- ):[];
+ if(!q){
+   if(drop) drop.style.display='none';
+   if(out) out.innerHTML='';
+   return;
+ }
+ const scored=list.map(x=>{
+   const name=elderlyNorm(x.name), nic=elderlyNorm(x.nic||x.id), hh=elderlyNorm(x.hh||x.house), allowance=elderlyNorm(x.allowance_no);
+   let score=0;
+   if(name===q) score=100;
+   else if(name.startsWith(q)) score=90;
+   else if(elderlyNameMatches(x.name,raw)) score=80;
+   else if(nic.includes(q)||hh.includes(q)||allowance.includes(q)) score=70;
+   else return null;
+   return {x,score};
+ }).filter(Boolean).sort((a,b)=>b.score-a.score || String(a.x.name||'').localeCompare(String(b.x.name||''),'si'));
+ const hits=scored.map(o=>o.x);
  if(drop){
-  drop.innerHTML=hits.slice(0,30).map((x,i)=>`<div class="elderlyOption" data-i="${i}">🪪 ${escapeHtml(x.nic||x.id||'Not available')} — 📄 ${escapeHtml(x.allowance_no||'')} — ${escapeHtml(x.name||'')}</div>`).join('');
+  drop.innerHTML=hits.slice(0,30).map((x,i)=>`<div class="elderlyOption" data-i="${i}"><div class="elderlyOptionName">👤 ${escapeHtml(x.name||'Name not available')}</div><div class="elderlyOptionMeta">🪪 ${escapeHtml(x.nic||x.id||'ID not available')} ${x.hh?` • 🏠 ${escapeHtml(x.hh)}`:''} ${x.allowance_no?` • 📄 ${escapeHtml(x.allowance_no)}`:''}</div></div>`).join('');
   drop.style.display=hits.length?'block':'none';
   drop.querySelectorAll('.elderlyOption').forEach(el=>el.onclick=()=>{
     const x=hits[Number(el.dataset.i)];
-    if($('elderlyQ'))$('elderlyQ').value=x.nic||x.id||x.allowance_no||x.hh||'';
+    if($('elderlyQ')) $('elderlyQ').value=x.name||x.nic||x.id||x.allowance_no||x.hh||'';
     drop.style.display='none';
     renderElderlyRows([x]);
   });
  }
- if(!q){out.innerHTML='';return;}
  renderElderlyRows(hits);
 }
+
 function renderElderlyRows(rows){
  const out=$('elderlyResults'); if(!out)return;
  out.innerHTML=rows.length?rows.map(x=>`<div class="elderlyItem"><div class="elderlyName">${escapeHtml(x.name||'-')}</div><div class="elderlyMeta">${x.allowance_no?`Adult Allowance No: <b>${escapeHtml(x.allowance_no)}</b><br>`:''}ID Number: <b>${escapeHtml(x.nic||x.id||'Not available')}</b><br>HH Number: <b>${escapeHtml(x.hh||x.house||'-')}</b>${x.address?`<br>Address: <b>${escapeHtml(x.address)}</b>`:''}</div></div>`).join(''):'<div class="elderlyItem">No matching record found</div>';
