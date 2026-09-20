@@ -508,6 +508,31 @@ function getBirthFilteredRows(){
 function runBirthSearch(){
  const rows=getBirthFilteredRows(); $('birthCount').textContent=`${rows.length} දෙනෙක් හමු විය`; const tbody=$('birthResultsBody'); tbody.innerHTML=rows.slice(0,200).map((x,i)=>{const b=nicBirthInfo(x.id)||{};return `<tr><td>${i+1}</td><td>${escapeHtml(x.id)}</td><td>${escapeHtml(x.name||'')}</td><td>${escapeHtml(b.dobSi||'-')}</td><td>${escapeHtml(String(b.age??'-'))}</td><td>${escapeHtml(b.gender||'-')}</td><td>${escapeHtml(addressFromRecord(x))}</td></tr>`}).join(''); $('birthResults').style.display=rows.length?'block':'none'; if(rows.length>200)$('birthCount').textContent+=` (පළමු 200 පෙන්වයි; Export එකෙන් සියල්ල ගන්න)`;
 }
+
+function renderHouseholdBenefits(person){
+ const host=$('householdBenefits'); if(!host) return;
+ const hh=String(person?.house||person?.hh||'').trim();
+ if(!hh){host.innerHTML='';return;}
+ const key=String(hh).toLowerCase().replace(/\s+/g,'');
+ const matches=[]; const seen=new Set();
+ for(const e of (Array.isArray(ELDERLY)?ELDERLY:[])){
+   const nic=String(e.nic||e.id||'').trim();
+   if(!nic) continue;
+   const related=nicAliases(nic).map(a=>MAP.get(a)).find(Boolean);
+   if(!related) continue;
+   const rhouse=String(related.house||related.hh||'').toLowerCase().replace(/\s+/g,'');
+   if(rhouse && rhouse===key){
+     const k=(nic+'|'+String(e.name||'')).toLowerCase();
+     if(!seen.has(k)){seen.add(k);matches.push(e);}
+   }
+ }
+ if(!matches.length){
+   host.innerHTML='<div class="benefitTitle">🏠 මේ ගෙදරට අදාළ සහනාධාර ලැයිස්තු</div><div class="benefitEmpty">වැඩිහිටි දීමනා ලාභියෙක් හමු නොවීය.</div>';
+   return;
+ }
+ host.innerHTML='<div class="benefitTitle">🏠 මේ ගෙදර වැඩිහිටි දීමනා ලාභියා/ලාභීන්</div>'+matches.map(e=>`<div class="benefitItem"><b>👴 ${escapeHtml(e.name||'-')}</b><br>🪪 ${escapeHtml(e.nic||e.id||'-')} ${e.allowance_no?`<br>📄 Allowance No: ${escapeHtml(e.allowance_no)}`:''}</div>`).join('');
+}
+
 async function openIWMSHousehold(hh){
  const value=String(hh||'').trim();
  if(!value) return;
@@ -546,6 +571,7 @@ async function search(){
  const bi=nicBirthInfo(x.id); $('birthDate').textContent=bi?bi.dobSi:'-'; $('age').textContent=bi?`${bi.age} වසර`:'-'; $('gender').textContent=bi?bi.gender:'-'; $('address').textContent=addressFromRecord(x); $('rid').textContent=x.id; $('serial').textContent=x.serial||'-'; $('status').textContent=x.status_label||'-';
  $('gn').textContent=x.gn||'327-අලුවිහාරේ';
  $('electoralDistrict').textContent='5 - මාතලේ'; $('pollingDivision').textContent='ඇ - මාතලේ'; $('pollingDistrict').textContent='21'; $('pollingDistrictName').textContent='අලුවිහාරේ'; $('page').textContent=x.page||'-';
+ renderHouseholdBenefits(x);
  $('pdfLink').href='source.pdf#page='+x.page; $('phoneSaved').textContent=''; $('phoneInput').value=''; $('phoneInput2').value=''; $('phoneEdit').style.display='none'; $('savedPhoneView').style.display='none'; $('savedPhoneNumber').textContent=''; $('savedPhoneNumber2').textContent=''; $('savedPhoneNumber2').style.display='none'; updateWhatsapp(x.name,'','whatsappBtn'); updateWhatsapp(x.name,'','whatsappBtn2');
  const ph=await getPhone(x.id); $('phoneInput').value=ph.phone||''; $('phoneInput2').value=ph.phone2||''; updateWhatsapp(x.name,ph.phone||'','whatsappBtn'); updateWhatsapp(x.name,ph.phone2||'','whatsappBtn2');
  if(ph.phone||ph.phone2){ $('savedPhoneNumber').textContent=phoneDisplay(ph.phone||''); $('savedPhoneNumber2').textContent=phoneDisplay(ph.phone2||''); $('savedPhoneNumber2').style.display=ph.phone2?'block':'none'; $('savedPhoneView').style.display='flex'; } else { $('phoneEdit').style.display='block'; }
@@ -655,4 +681,18 @@ document.addEventListener('DOMContentLoaded',()=>{
    if($('elderlyDropdown'))$('elderlyDropdown').style.display='none';
    renderElderlyRows(Array.isArray(ELDERLY)?ELDERLY:[]);
  });
+});
+
+
+document.addEventListener('DOMContentLoaded',()=>{
+ const th=$('tabHousehold'), te=$('tabElderly'), hp=$('householdTabPanel'), ep=$('elderlyTabPanel');
+ if(!th||!te||!hp||!ep) return;
+ const activate=(which)=>{
+   const household=which==='household';
+   th.classList.toggle('active',household); te.classList.toggle('active',!household);
+   hp.hidden=!household; ep.hidden=household;
+   if(!household){ const q=$('elderlyQ'); if(q) setTimeout(()=>q.focus(),60); }
+ };
+ th.addEventListener('click',()=>activate('household'));
+ te.addEventListener('click',()=>activate('elderly'));
 });

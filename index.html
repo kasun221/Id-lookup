@@ -241,9 +241,19 @@ input,select{background:#fff!important;color:#0f172a!important;border-color:#cbd
 .elderlyLink{border:0;background:#eff6ff;color:#1d4ed8;border-radius:8px;padding:4px 8px;font:inherit;font-weight:800;cursor:pointer;display:inline-block;max-width:100%;word-break:break-all}
 .elderlyLink:hover{background:#dbeafe;text-decoration:underline}
 .elderlyHHLink{background:#ecfdf5;color:#047857}.elderlyHHLink:hover{background:#d1fae5}
+
+.mainTabs{display:flex;gap:8px;padding:8px;background:#f1f5f9;border-radius:15px;margin-bottom:14px}.mainTab{flex:1;border:0;border-radius:11px;padding:12px 10px;background:transparent;color:#475569;font-weight:800;cursor:pointer}.mainTab.active{background:#fff;color:#1d4ed8;box-shadow:0 2px 8px rgba(15,23,42,.08)}.tabsCard{padding:12px;margin-top:14px}.tabPanel[hidden]{display:none!important}.householdBenefits{margin-top:16px;padding:14px;border:1px solid #bfdbfe;border-radius:14px;background:#eff6ff}.benefitTitle{font-weight:800;color:#1e3a8a;margin-bottom:8px}.benefitItem{padding:10px 0;border-top:1px solid #dbeafe}.benefitItem:first-child{border-top:0}.benefitItem b{color:#0f172a}.benefitEmpty{font-size:13px;color:#64748b}
 </style>
 </head><body><header><div class="wrap" style="margin:0 auto;padding:0"><h1>අලුවිහාරේ ID Lookup</h1><div class="sub">ID අංකය ඇතුළත් කර තොරතුරු සොයන්න</div></div></header><main class="wrap"><section class="card searchCard"><div class="search"><input id="idInput" inputmode="text" autocomplete="off" placeholder="උදා: 457691386V" aria-label="ID number" aria-controls="suggestions" aria-autocomplete="list"><button class="btn" id="searchBtn">සොයන්න</button><div class="suggestions" id="suggestions" role="listbox"></div></div><div class="hint">V / X සහ අංක 12-digit ID දෙකම සෙවිය හැක.</div></section>
+<section class="card result" id="result"><div class="nameTitle">සම්පූර්ණ නම</div><div class="name" id="name"></div><button class="expandName" id="expandName">සම්පූර්ණ නම විශාලව බලන්න</button><div class="found"><div class="row"><div class="label">ජාතික හැඳුනුම් අංකය</div><div class="value" id="rid"></div></div><div class="row"><div class="label">ගෘහ අංකය</div><div class="value" id="house"></div></div><div class="row"><div class="label">අනු අංකය</div><div class="value" id="serial"></div></div><div class="row"><div class="label">ගැ / පි</div><div class="value"><span class="status" id="status"></span></div></div><div class="row"><div class="label">ග්‍රා.නි.කො.</div><div class="value" id="gn"></div></div><div class="row"><div class="label">මැතිවරණ කොට්ඨාසය</div><div class="value" id="electoralDistrict"></div></div><div class="row"><div class="label">ඡන්ද ප්‍රදේශය</div><div class="value" id="pollingDivision"></div></div><div class="row"><div class="label">ඡන්ද කොට්ඨාසය</div><div class="value" id="pollingDistrict"></div></div><div class="row"><div class="label">ඡන්ද කොට්ඨාසයේ නම</div><div class="value" id="pollingDistrictName"></div></div><div class="row"><div class="label">උපන් දිනය</div><div class="value" id="birthDate">-</div></div><div class="row"><div class="label">වයස (අදට)</div><div class="value" id="age">-</div></div><div class="row"><div class="label">ස්ත්‍රී / පුරුෂ</div><div class="value" id="gender">-</div></div><div class="row"><div class="label">ලිපිනය / ගෘහ අංකය</div><div class="value" id="address">-</div></div><div class="row"><div class="label">මූලාශ්‍ර පිටුව</div><div class="value" id="page"></div></div></div><div class="phoneBox"><div class="phoneTitle">දුරකථන අංක</div><div class="savedPhoneView" id="savedPhoneView" style="display:none"><div class="savedPhoneNumber" id="savedPhoneNumber"></div><a class="whatsappBtn" id="whatsappBtn" target="_blank" rel="noopener">🟢 WhatsApp</a><div class="savedPhoneNumber" id="savedPhoneNumber2" style="display:none"></div><a class="whatsappBtn" id="whatsappBtn2" target="_blank" rel="noopener">🟢 WhatsApp 2</a><button class="editPhone" id="editPhoneBtn">✏️ Edit / වෙනස් කරන්න</button></div><div class="phoneEdit" id="phoneEdit"><div class="phoneLine"><input id="phoneInput" type="tel" inputmode="tel" autocomplete="tel" placeholder="දුරකථන අංකය 1 - 07XXXXXXXX"><input id="phoneInput2" type="tel" inputmode="tel" autocomplete="tel" placeholder="දුරකථන අංකය 2 - 07XXXXXXXX"><button class="savePhone" id="savePhoneBtn">🔐 PIN සමඟ සුරකින්න</button><button class="cancelPhone" id="cancelPhoneBtn">අවලංගු</button></div></div><div class="saved" id="phoneSaved"></div></div><div class="actions"><a class="action" id="pdfLink" target="_blank">මූලාශ්‍ර PDF බලන්න</a><button class="action" id="sourceImageBtn" type="button">📷 මුල් ලේඛනයේ නම බලන්න</button></div></section>
 
+
+<section class="tabsCard card">
+  <div class="mainTabs" role="tablist">
+    <button class="mainTab active" id="tabHousehold" type="button">🏠 Household Management</button>
+    <button class="mainTab" id="tabElderly" type="button">👴 Elderly Allowance</button>
+  </div>
+  <div id="householdTabPanel" class="tabPanel">
 <section class="card addPersonCard" id="addPersonCard">
   <div class="sectionTitle">➕ Add Person to Household</div>
   <div class="addGrid">
@@ -261,9 +271,7 @@ input,select{background:#fff!important;color:#0f172a!important;border-color:#cbd
     <button class="btn secondaryBtn" id="newHouseBtn" type="button">🏠 Add to New House</button>
   </div>
   <div id="addPersonMsg" class="addMsg"></div><div id="onlineSaveStatus" class="onlineSaveStatus"></div>
-</section>
-
-<section class="card householdManageCard" id="householdManageCard">
+</section><section class="card householdManageCard" id="householdManageCard">
   <div class="sectionTitle">🏠 Household Management</div>
   <div class="manageGrid">
     <button class="manageBtn" id="addHouseholdBtn" type="button">➕ Add Household</button>
@@ -273,7 +281,8 @@ input,select{background:#fff!important;color:#0f172a!important;border-color:#cbd
   </div>
   <div id="householdManageMsg" class="addMsg"></div>
 </section>
-
+  </div>
+  <div id="elderlyTabPanel" class="tabPanel" hidden>
 <section class="card elderlyCard" id="elderlyCard">
   <button class="elderlyToggle" id="elderlyToggle" type="button" aria-expanded="false">
     <span class="elderlyToggleTitle">👴 Elderly Allowance List</span>
@@ -290,7 +299,10 @@ input,select{background:#fff!important;color:#0f172a!important;border-color:#cbd
     <div id="elderlyResults" class="elderlyResults"></div>
   </div>
 </section>
-<section class="card result" id="result"><div class="nameTitle">සම්පූර්ණ නම</div><div class="name" id="name"></div><button class="expandName" id="expandName">සම්පූර්ණ නම විශාලව බලන්න</button><div class="found"><div class="row"><div class="label">ජාතික හැඳුනුම් අංකය</div><div class="value" id="rid"></div></div><div class="row"><div class="label">ගෘහ අංකය</div><div class="value" id="house"></div></div><div class="row"><div class="label">අනු අංකය</div><div class="value" id="serial"></div></div><div class="row"><div class="label">ගැ / පි</div><div class="value"><span class="status" id="status"></span></div></div><div class="row"><div class="label">ග්‍රා.නි.කො.</div><div class="value" id="gn"></div></div><div class="row"><div class="label">මැතිවරණ කොට්ඨාසය</div><div class="value" id="electoralDistrict"></div></div><div class="row"><div class="label">ඡන්ද ප්‍රදේශය</div><div class="value" id="pollingDivision"></div></div><div class="row"><div class="label">ඡන්ද කොට්ඨාසය</div><div class="value" id="pollingDistrict"></div></div><div class="row"><div class="label">ඡන්ද කොට්ඨාසයේ නම</div><div class="value" id="pollingDistrictName"></div></div><div class="row"><div class="label">උපන් දිනය</div><div class="value" id="birthDate">-</div></div><div class="row"><div class="label">වයස (අදට)</div><div class="value" id="age">-</div></div><div class="row"><div class="label">ස්ත්‍රී / පුරුෂ</div><div class="value" id="gender">-</div></div><div class="row"><div class="label">ලිපිනය / ගෘහ අංකය</div><div class="value" id="address">-</div></div><div class="row"><div class="label">මූලාශ්‍ර පිටුව</div><div class="value" id="page"></div></div></div><div class="phoneBox"><div class="phoneTitle">දුරකථන අංක</div><div class="savedPhoneView" id="savedPhoneView" style="display:none"><div class="savedPhoneNumber" id="savedPhoneNumber"></div><a class="whatsappBtn" id="whatsappBtn" target="_blank" rel="noopener">🟢 WhatsApp</a><div class="savedPhoneNumber" id="savedPhoneNumber2" style="display:none"></div><a class="whatsappBtn" id="whatsappBtn2" target="_blank" rel="noopener">🟢 WhatsApp 2</a><button class="editPhone" id="editPhoneBtn">✏️ Edit / වෙනස් කරන්න</button></div><div class="phoneEdit" id="phoneEdit"><div class="phoneLine"><input id="phoneInput" type="tel" inputmode="tel" autocomplete="tel" placeholder="දුරකථන අංකය 1 - 07XXXXXXXX"><input id="phoneInput2" type="tel" inputmode="tel" autocomplete="tel" placeholder="දුරකථන අංකය 2 - 07XXXXXXXX"><button class="savePhone" id="savePhoneBtn">🔐 PIN සමඟ සුරකින්න</button><button class="cancelPhone" id="cancelPhoneBtn">අවලංගු</button></div></div><div class="saved" id="phoneSaved"></div></div><div class="actions"><a class="action" id="pdfLink" target="_blank">මූලාශ්‍ර PDF බලන්න</a><button class="action" id="sourceImageBtn" type="button">📷 මුල් ලේඛනයේ නම බලන්න</button></div></section><section class="card houseSearchCard">
+  </div>
+</section>
+
+<section class="card houseSearchCard">
 <div class="sectionTitle">🏠 ගෙදර අංකය අනුව සොයන්න</div>
 <div class="birthHint">ගෘහ අංකය ඇතුළත් කළාම එම ගෙදරට අදාළ සියලුම අය පෙන්වයි.</div>
 <div class="yearGrid" style="grid-template-columns:1fr auto">
