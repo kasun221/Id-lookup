@@ -530,7 +530,7 @@ function renderHouseholdBenefits(person){
    host.innerHTML='<div class="benefitTitle">🏠 මේ ගෙදරට අදාළ සහනාධාර ලැයිස්තු</div><div class="benefitEmpty">වැඩිහිටි දීමනා ලාභියෙක් හමු නොවීය.</div>';
    return;
  }
- host.innerHTML='<div class="benefitTitle">🏠 මේ ගෙදර වැඩිහිටි දීමනා ලාභියා/ලාභීන්</div>'+matches.map(e=>`<div class="benefitItem"><b>👴 ${escapeHtml(e.name||'-')}</b><br>🪪 ${escapeHtml(e.nic||e.id||'-')} ${e.allowance_no?`<br>📄 Allowance No: ${escapeHtml(e.allowance_no)}`:''}</div>`).join('');
+ host.innerHTML='<div class="benefitTitle eldersAllowanceTitle">Elders Allowance</div><div class="benefitSubTitle">🏠 මේ ගෙදර වැඩිහිටි දීමනා ලාභියා/ලාභීන්</div>'+matches.map(e=>`<div class="benefitItem"><b>👴 ${escapeHtml(e.name||'-')}</b><br>🪪 ${escapeHtml(e.nic||e.id||'-')} ${e.allowance_no?`<br>📄 Allowance No: ${escapeHtml(e.allowance_no)}`:''}</div>`).join('');
 }
 
 async function openIWMSHousehold(hh){
