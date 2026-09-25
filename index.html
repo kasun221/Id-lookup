@@ -1,14 +1,12 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#1e3a5f" />
-    <title>Aluvihare Household & Social Assistance Management System</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<!doctype html><html lang="si"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>අළුවිහාරේ Household & Voter Management – V52</title><link rel="stylesheet" href="style.css"></head>
+<body><header><h1>අළුවිහාරේ Household & Voter Management</h1><p>V52 • නිවැරදි Excel නාම ලැයිස්තුව</p></header>
+<main>
+<section class="card"><h2>🔎 පුද්ගල සෙවීම</h2>
+<div class="row"><input id="q" placeholder="නම / NIC / ගෙදර අංකය / අනු අංකය"><select id="area"><option value="">සියලු ප්‍රදේශ</option></select><button onclick="doSearch()">සොයන්න</button></div>
+<div id="suggest"></div><div id="info"></div></section>
+<section class="card"><h2>🏠 Household Search</h2><div class="row"><input id="house" placeholder="ගෙදර අංකය උදා: 10/A"><button onclick="houseSearch()">ගෙදර සොයන්න</button></div></section>
+<section class="card"><h2>📋 සම්පූර්ණ ලැයිස්තුව</h2><button onclick="showAll()">සියලු වාර්තා පෙන්වන්න</button></section>
+<section id="results"></section></main>
+<footer>V52 • Source: supplied Excel • 4,331 records</footer><script src="app.js"></script></body></html>
